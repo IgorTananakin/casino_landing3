@@ -1,3 +1,4 @@
+@charset "UTF-8";
 /* Modern CSS Reset */
 @import url("https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Rubik+Mono+One&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap");
@@ -187,6 +188,13 @@ canvas {
   .land__header-item_second_block {
     margin-right: 20px;
   }
+  .land__header-logo-item {
+    -webkit-box-flex: 1;
+        -ms-flex: 1 0 auto;
+            flex: 1 0 auto;
+    max-width: 100%;
+    max-height: 100%;
+  }
 }
 .land__section_1 {
   display: -webkit-box;
@@ -308,6 +316,7 @@ canvas {
         -ms-flex-order: 2;
             order: 2;
     margin-top: 30px;
+    z-index: 1;
   }
   .land__animate_section_1 .frame-animation {
     -webkit-transform: scale(2);
@@ -324,6 +333,7 @@ canvas {
     -webkit-box-ordinal-group: 2;
         -ms-flex-order: 1;
             order: 1;
+    z-index: 2;
   }
   .land__desc_container_section_1 .land__super_btn_block {
     margin-bottom: 20px;
@@ -334,16 +344,19 @@ canvas {
             justify-content: center;
     text-align: center;
     font-size: 28px;
+    line-height: 1.2;
   }
   .land__subtitle {
     font-size: 24px;
     text-align: center;
+    line-height: 1.2;
   }
   .land__super-btn {
     font-size: 24px;
     padding: 12px 20px;
     margin: 0 auto;
     max-width: 90%;
+    border-radius: 15px;
   }
 }
 .land__section_2 {
@@ -453,6 +466,55 @@ canvas {
   }
 }
 
+/* анимация 2 секция */
+@-webkit-keyframes slideInFromLeft {
+  from {
+    -webkit-transform: translateX(-100%);
+            transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    -webkit-transform: translateX(0);
+            transform: translateX(0);
+    opacity: 1;
+  }
+}
+@keyframes slideInFromLeft {
+  from {
+    -webkit-transform: translateX(-100%);
+            transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    -webkit-transform: translateX(0);
+            transform: translateX(0);
+    opacity: 1;
+  }
+}
+@-webkit-keyframes slideInFromRight {
+  from {
+    -webkit-transform: translateX(100%);
+            transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    -webkit-transform: translateX(0);
+            transform: translateX(0);
+    opacity: 1;
+  }
+}
+@keyframes slideInFromRight {
+  from {
+    -webkit-transform: translateX(100%);
+            transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    -webkit-transform: translateX(0);
+            transform: translateX(0);
+    opacity: 1;
+  }
+}
 @media (max-width: 800px) {
   .land__sectin_2_block {
     -webkit-box-orient: vertical;
@@ -464,6 +526,7 @@ canvas {
     width: 100%;
     padding-left: 25px;
     padding-right: 25px;
+    margin-left: 0px;
   }
   .land__animate_section_2 {
     width: 100%;
@@ -471,6 +534,10 @@ canvas {
     height: 350px;
     margin: 30px 0;
     background-position: center;
+    -webkit-animation: slideInFromRight 1.5s ease-out forwards, fadeIn 1.5s ease-out forwards;
+            animation: slideInFromRight 1.5s ease-out forwards, fadeIn 1.5s ease-out forwards;
+    animation-timeline: view(--section3-trigger);
+    animation-range: entry 50% cover 70%, entry 50% cover 70%;
   }
 }
 .land__section_3 {
@@ -478,8 +545,7 @@ canvas {
   display: -ms-flexbox;
   display: flex;
   width: 100%;
-  background: -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.7)), to(rgba(0, 0, 0, 0.7))), url("/media/img/coins_bg.png") no-repeat center center;
-  background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("/media/img/coins_bg.png") no-repeat center center;
+  background: url("/media/img/coins_bg.png") no-repeat center center;
   background-size: cover;
   padding-top: 50px;
 }
@@ -575,13 +641,21 @@ canvas {
   width: 100%;
 }
 
+@media (max-width: 600px) {
+  .land__section_3 .land__text_subtitle {
+    -webkit-box-align: start;
+        -ms-flex-align: start;
+            align-items: start;
+    line-height: 1.1;
+  }
+}
 .land__section_4 {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
   width: 100%;
-  background: -webkit-gradient(linear, left top, left bottom, from(#212121), color-stop(20%, transparent)), -webkit-gradient(linear, left bottom, left top, from(#212121), color-stop(20%, transparent)), url("/media/img/japane.png") center/cover no-repeat;
-  background: linear-gradient(to bottom, #212121 0%, transparent 20%), linear-gradient(to top, #212121 0%, transparent 20%), url("/media/img/japane.png") center/cover no-repeat;
+  background: -webkit-gradient(linear, left top, left bottom, from(#212121), color-stop(20%, transparent)), -webkit-gradient(linear, left bottom, left top, from(#212121), color-stop(20%, transparent)), url("/media/img/japane1.png") center/cover no-repeat;
+  background: linear-gradient(to bottom, #212121 0%, transparent 20%), linear-gradient(to top, #212121 0%, transparent 20%), url("/media/img/japane1.png") center/cover no-repeat;
   opacity: 0.8;
   z-index: 1;
   position: relative;
@@ -713,8 +787,8 @@ canvas {
   display: -ms-flexbox;
   display: flex;
   width: 100%;
-  background: -webkit-gradient(linear, left top, left bottom, from(#212121), color-stop(20%, transparent)), -webkit-gradient(linear, left bottom, left top, from(#212121), color-stop(20%, transparent)), url("/media/img/fon_section5.png") center/cover no-repeat;
-  background: linear-gradient(to bottom, #212121 0%, transparent 20%), linear-gradient(to top, #212121 0%, transparent 20%), url("/media/img/fon_section5.png") center/cover no-repeat;
+  background: -webkit-gradient(linear, left top, left bottom, from(#212121), color-stop(30%, transparent)), -webkit-gradient(linear, left bottom, left top, from(rgba(0, 0, 0, 0.7)), color-stop(40%, transparent)), url("/media/img/fon_section5.png") center/cover no-repeat;
+  background: linear-gradient(to bottom, #212121 0%, transparent 30%), linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 40%), url("/media/img/fon_section5.png") center/cover no-repeat;
   padding: 80px 0;
 }
 .land__section_5 .land__section_5_container {
@@ -770,6 +844,8 @@ canvas {
   .land__section_5 .land__section_5_item canvas {
     width: 150px;
     height: 150px;
+    -webkit-transform: scale(1.5);
+            transform: scale(1.5);
   }
 }
 
@@ -781,8 +857,8 @@ canvas {
   -webkit-box-direction: normal;
       -ms-flex-direction: column;
           flex-direction: column;
-  background: -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.7)), to(rgba(0, 0, 0, 0.7))), -webkit-gradient(linear, left top, left bottom, from(#212121), color-stop(20%, transparent)), -webkit-gradient(linear, left bottom, left top, from(#212121), color-stop(20%, transparent)), url("/media/img/fon_footer.png");
-  background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), linear-gradient(to bottom, #212121 0%, transparent 20%), linear-gradient(to top, #212121 0%, transparent 20%), url("/media/img/fon_footer.png");
+  background: -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.8)), to(rgba(0, 0, 0, 0.7))), -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.7)), color-stop(40%, transparent)), url("/media/img/fon_footer.png") center/cover no-repeat;
+  background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.7)), linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 0%, transparent 40%), url("/media/img/fon_footer.png") center/cover no-repeat;
   padding-top: 50px;
 }
 
@@ -842,6 +918,14 @@ canvas {
   }
 }
 
+.land_circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 100%;
+  background: #9D9D9D;
+  margin-right: 10px;
+}
+
 @media (max-width: 1000px) {
   .land__main_title {
     font-size: clamp(40px, 3.5vw, 60px);
@@ -860,6 +944,6 @@ canvas {
 }
 @media (max-width: 400px) {
   .land__main_title {
-    font-size: clamp(20px, 3.5vw, 25px);
+    font-size: 24px;
   }
 }
