@@ -249,7 +249,7 @@ canvas{
   width: 100%;
   background: 
   // linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(33, 33, 33, 1) 100%),
-  url('/media/img/fon_section2.png') center/cover no-repeat;
+  url('media/img/fon_section2.png') center/cover no-repeat;
   flex-direction: column;
   padding-top: 70px;
   padding-bottom: 70px;
@@ -287,7 +287,7 @@ canvas{
 .land__animate_section_2 {
   width: 50%;
   position: relative; 
-  background: url('/media/img/makbook.png') no-repeat center center;
+  background: url('https://igortananakin.github.io/casino_landing3/media/img/makbook.png') no-repeat center center;
   background-size: contain; 
   height: 400px; 
   right: 2%;
@@ -370,7 +370,7 @@ canvas{
   width: 100%;
   background: 
     // linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7), 20%),
-    url('/media/img/coins_bg.png') no-repeat center center;
+    url('https://igortananakin.github.io/casino_landing3/media/img/coins_bg.png') no-repeat center center;
   background-size: cover;
   padding-top: 50px;
   
@@ -456,7 +456,7 @@ canvas{
   background: 
     linear-gradient(to bottom, $color-black 0%, transparent 20%),
     linear-gradient(to top, $color-black 0%, transparent 20%),
-    url('/media/img/japane1.png') center/cover no-repeat;
+    url('https://igortananakin.github.io/casino_landing3/media/img/japane1.png') center/cover no-repeat;
   opacity: 0.8;
   z-index: 1;
   position: relative;
@@ -561,7 +561,7 @@ canvas{
   background: 
   linear-gradient(to bottom, $color-black 0%, transparent 30%),
   linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 40%),
-  url('/media/img/fon_section5.png') center/cover no-repeat;
+  url('https://igortananakin.github.io/casino_landing3/media/img/fon_section5.png') center/cover no-repeat;
   padding: 80px 0; 
   
   .land__section_5_container {
@@ -614,7 +614,7 @@ canvas{
   
   linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 0%, transparent 40%),
   // linear-gradient(to top, $color-black 0%, transparent 30%),
-  url('/media/img/fon_footer.png') center/cover no-repeat;
+  url('https://igortananakin.github.io/casino_landing3/media/img/fon_footer.png') center/cover no-repeat;
   padding-top: 50px;
 }
 .land__footer_block_column{
