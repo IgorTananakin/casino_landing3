@@ -1,317 +1,238 @@
 class FrameAnimator {
     constructor(options) {
-        // Проверка обязательных параметров
-        if (!options.canvas) throw new Error('Canvas обязателен');
-        if (!options.prefix) throw new Error('Prefix обязателен');
-        if (!options.frameCount) throw new Error('количество фотографий обязательно');
+      if (!options.canvas) throw new Error('Canvas обязателен');
+      if (!options.prefix) throw new Error('Prefix обязателен');
+      if (!options.frameCount) throw new Error('Количество кадров обязательно');
   
-        // Настройки
-        this.canvas = options.canvas;
-        this.ctx = this.canvas.getContext('2d');
-        this.prefix = options.prefix;
-        this.frameCount = options.frameCount;
-        this.imagePath = this.normalizePath(options.imagePath || './media/img-cat/');
-        this.digits = options.digits || 3;
-        this.fps = options.fps || 24;
-        this.loop = options.loop !== false;
-        this.autoplay = options.autoplay !== false;
-        this.debug = options.debug || true;
+      this.canvas = options.canvas;
+      this.ctx = this.canvas.getContext('2d');
+      this.prefix = options.prefix;
+      this.frameCount = options.frameCount;
+      this.imagePath = this.normalizePath(options.imagePath || './media/imgOpt/');
+      this.digits = options.digits || 3;
+      this.fps = options.fps || 24;
+      this.loop = options.loop !== false;
+      this.autoplay = options.autoplay !== false;
+      this.playOnce = options.playOnce || false;
   
-        // Состояние
-        this.images = [];
-        this.currentFrame = 0;
-        this.isPlaying = false;
-        this.animationId = null;
-        this.hasError = false;
-        this.originalWidth = 0;
-        this.originalHeight = 0;
-        this.scale = 1;
+      this.images = new Array(this.frameCount).fill(null);
+      this.currentFrame = 0;
+      this.isPlaying = false;
+      this.animationId = null;
+      this.hasError = false;
+      this.originalWidth = 0;
+      this.originalHeight = 0;
+      this.scale = 1;
+      this.hasPlayed = false;
+      this.loadedCount = 0;
   
-        // для однократного проигрывания
-        this.playOnce = options.playOnce || false;
-        this.hasPlayed = false;
-  
-        // Инициализация
-        this.log('инициализация:', options);
-        this.init();
+      this.init();
     }
   
-    // ========== Основные методы ========== //
+    async init() {
+      try {
+        const firstFrame = await this.loadImage(1);
+        this.originalWidth = firstFrame.naturalWidth;
+        this.originalHeight = firstFrame.naturalHeight;
+        this.setupResizeObserver();
+        this.updateCanvasSize();
   
-    init() {
-        this.log('запуск');
+        await this.loadAllFrames();
+  
+        if (this.autoplay) this.play();
+  
+        setTimeout(() => {
+          document.body.classList.add('loaded');
+        }, 500);
+  
+      } catch (err) {
+        console.error('Ошибка инициализации:', err);
+        document.body.classList.add('loaded');
+      }
+    }
+  
+    async loadAllFrames() {
+      const batchSize = 45;
+      
+      for (let i = 1; i <= this.frameCount; i += batchSize) {
+        const end = Math.min(i + batchSize - 1, this.frameCount);
+        const frameNumbers = Array.from({length: end - i + 1}, (_, idx) => i + idx);
         
-        // Проверяем существование первого кадра
-        this.testFirstFrame()
-            .then(img => {
-                this.originalWidth = img.naturalWidth || img.width;
-                this.originalHeight = img.naturalHeight || img.height;
-                this.setupResizeObserver();
-                this.updateCanvasSize();
-                this.preloadImages();
-                if (this.autoplay) this.play();
-            })
-            .catch(err => {
-                this.error('Initialization failed:', err.message);
-            });
+        await Promise.all(
+          frameNumbers.map(frameNum => this.loadFrame(frameNum))
+        );
+      }
+    }
+  
+    async loadFrame(frameNum) {
+      if (this.images[frameNum - 1]) return;
+      const img = await this.loadImage(frameNum);
+      this.images[frameNum - 1] = img;
+      this.loadedCount++;
+      return img;
+    }
+  
+    loadImage(frameNum) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.src = this.getFramePath(frameNum);
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+      });
     }
   
     play() {
-        if (this.isPlaying || this.hasError) return;
-        
-        this.currentFrame = 0; // Всегда начинаем с 0 кадра
-        this.hasPlayed = false;
-        this.isPlaying = true;
-        this.lastTime = performance.now();
-        this.animationId = requestAnimationFrame(this.animate.bind(this));
-        this.log('запуск анимации с начала');
+      if (this.isPlaying || this.hasError) return;
+      this.currentFrame = 0;
+      this.hasPlayed = false;
+      this.isPlaying = true;
+      this.lastTime = performance.now();
+      this.animationId = requestAnimationFrame(this.animate.bind(this));
     }
   
     playFromFrame(startFrame) {
-        if (this.isPlaying || this.hasError) return;
-        
-        // Проверяем, чтобы startFrame был в допустимых пределах
-        startFrame = Math.max(0, Math.min(startFrame, this.frameCount - 1));
-        
-        this.currentFrame = startFrame;
-        this.hasPlayed = false;
-        this.isPlaying = true;
-        this.lastTime = performance.now();
-        this.animationId = requestAnimationFrame(this.animate.bind(this));
-        this.log(`запуск анимации с кадра ${startFrame}`);
+      if (this.isPlaying || this.hasError) return;
+      
+      startFrame = Math.max(0, Math.min(startFrame, this.frameCount - 1));
+      this.currentFrame = startFrame;
+      this.hasPlayed = false;
+      this.isPlaying = true;
+      this.lastTime = performance.now();
+      this.animationId = requestAnimationFrame(this.animate.bind(this));
     }
-  
-    stop() {
-        this.isPlaying = false;
-        if (this.animationId) {
-            cancelAnimationFrame(this.animationId);
-            this.log('остановка анимации');
-        }
-    }
-  
-    destroy() {
-        this.stop();
-        if (this.resizeObserver) {
-            this.resizeObserver.disconnect();
-        }
-    }
-  
-    // ========== Вспомогательные методы ========== //
-  
-    normalizePath(path) {
-        return path.endsWith('/') ? path : path + '/';
-    }
-  
-    log(...args) {
-        if (this.debug) {
-            console.log(`[картинка:${this.prefix}]`, ...args);
-        }
-    }
-  
-    error(...args) {
-        console.error(`[картинка:${this.prefix}]`, ...args);
-        this.hasError = true;
-        this.showErrorState();
-    }
-  
-    showErrorState() {
-        this.ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.fillStyle = '#fff';
-        this.ctx.font = '16px Arial';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText('ошибка ', this.canvas.width/2, this.canvas.height/2 - 10);
-        this.ctx.font = '12px Arial';
-        this.ctx.fillText(`проверить `, this.canvas.width/2, this.canvas.height/2 + 10);
-    }
-  
-    // ========== Методы работы с изображениями ========== //
-  
-    testFirstFrame() {
-        return new Promise((resolve, reject) => {
-            const testImg = new Image();
-            testImg.src = this.getFramePath(1);
-            
-            testImg.onload = () => {
-                this.log(`первая успешная загрузка: ${testImg.src}`);
-                resolve(testImg);
-            };
-            
-            testImg.onerror = () => {
-                reject(new Error(`ошибка в первом изображении: ${testImg.src}`));
-            };
-        });
-    }
-  
-    getFramePath(index) {
-        const frameNum = index.toString().padStart(this.digits, '0');
-        const path = `${this.imagePath}${this.prefix}/${this.prefix}${frameNum}.webp`;
-        return path;
-    }
-  
-    preloadImages() {
-        this.log(`предзагрузка ${this.frameCount} картинок`);
-        
-        let loadedCount = 0;
-        
-        for (let i = 1; i <= this.frameCount; i++) {
-            const img = new Image();
-            img.src = this.getFramePath(i);
-            img.dataset.frameIndex = i;
-            
-            img.onload = () => {
-                loadedCount++;
-                this.log(`картинка ${i} загружена (${loadedCount}/${this.frameCount})`);
-            };
-            
-            img.onerror = () => {
-                this.error(`ошибка загрузки картинки ${i}: ${img.src}`);
-            };
-            
-            this.images.push(img);
-        }
-    }
-  
-    // ========== Методы масштабирования ========== //
-  
-    setupResizeObserver() {
-        if (typeof ResizeObserver === 'undefined') {
-            window.addEventListener('resize', () => this.handleResize());
-            return;
-        }
-  
-        this.resizeObserver = new ResizeObserver(entries => {
-            for (let entry of entries) {
-                if (entry.target === this.canvas.parentElement) {
-                    this.handleResize();
-                }
-            }
-        });
-        this.resizeObserver.observe(this.canvas.parentElement);
-    }
-  
-    handleResize() {
-        if (!this.originalWidth || !this.originalHeight) return;
-        this.updateCanvasSize();
-        this.renderFrame();
-    }
-  
-    updateCanvasSize() {
-        const container = this.canvas.parentElement;
-        const containerWidth = container.clientWidth;
-        const containerHeight = container.clientHeight;
-        
-        // Рассчитываем масштаб с сохранением пропорций
-        const widthRatio = containerWidth / this.originalWidth;
-        const heightRatio = containerHeight / this.originalHeight;
-        this.scale = Math.min(widthRatio, heightRatio);
-        
-        // Устанавливаем размеры
-        this.canvas.width = this.originalWidth * this.scale;
-        this.canvas.height = this.originalHeight * this.scale;
-    }
-  
-    // ========== Метод анимации ========== //
   
     animate(timestamp) {
-        if (!this.isPlaying) return;
+      if (!this.isPlaying) return;
+      
+      const delta = timestamp - this.lastTime;
+      if (delta > 1000 / this.fps) {
+        this.renderFrame();
+        this.lastTime = timestamp - (delta % (1000 / this.fps));
         
-        if (this.playOnce && this.hasPlayed) {
+        if (this.currentFrame === this.frameCount - 1) {
+          this.hasPlayed = true;
+          if (this.playOnce && !this.loop) {
             this.stop();
             return;
+          }
         }
-        
-        const delta = timestamp - this.lastTime;
-        
-        if (delta > 1000 / this.fps) {
-            this.renderFrame();
-            this.lastTime = timestamp - (delta % (1000 / this.fps));
-            
-            if (this.currentFrame === this.frameCount - 1) {
-                this.hasPlayed = true;
-                if (this.playOnce && !this.loop) {
-                    this.stop();
-                    return;
-                }
-            }
-        }
-        
+      }
+      
+      if (!this.playOnce || !this.hasPlayed) {
         this.animationId = requestAnimationFrame(this.animate.bind(this));
+      }
     }
   
     renderFrame() {
         try {
-            // Увеличиваем кадр
-            if (!this.playOnce || !this.hasPlayed || this.loop) {
-                this.currentFrame = (this.currentFrame + 1) % this.frameCount;
-            }
-            
-            const img = this.images[this.currentFrame];
-            
-            if (!img.complete) {
-                this.log(`Frame ${this.currentFrame + 1} not loaded yet`);
-                return;
-            }
-            
-            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            
-            this.ctx.drawImage(
-                img, 
-                0, 0, this.originalWidth, this.originalHeight,
-                0, 0, this.canvas.width, this.canvas.height
-            );
-            
+          if (!this.playOnce || !this.hasPlayed || this.loop) {
+            this.currentFrame = (this.currentFrame + 1) % this.frameCount;
+          }
+          
+          const img = this.images[this.currentFrame];
+          if (!img) return;
+          
+          // Очищаем canvas с учетом DPR
+          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+          
+          // Рисуем изображение с учетом масштаба
+          this.ctx.drawImage(
+            img, 
+            0, 0, this.originalWidth, this.originalHeight,
+            0, 0, this.originalWidth * this.scale, this.originalHeight * this.scale
+          );
         } catch (err) {
-            this.stop();
+          console.error('Render error:', err);
+          this.stop();
         }
+      }
+  
+    stop() {
+      this.isPlaying = false;
+      if (this.animationId) {
+        cancelAnimationFrame(this.animationId);
+      }
     }
   
-    // ========== Статические методы ========== //
+    normalizePath(path) { return path.endsWith('/') ? path : path + '/'; }
+    
+    getFramePath(index) {
+      return `${this.imagePath}${this.prefix}/${this.prefix}${index.toString().padStart(this.digits, '0')}.webp`;
+    }
+  
+    setupResizeObserver() {
+      if (typeof ResizeObserver === 'undefined') {
+        window.addEventListener('resize', () => this.handleResize());
+        return;
+      }
+      this.resizeObserver = new ResizeObserver(() => this.handleResize());
+      this.resizeObserver.observe(this.canvas.parentElement);
+    }
+  
+    handleResize() {
+      if (!this.originalWidth || !this.originalHeight) return;
+      this.updateCanvasSize();
+      this.renderFrame();
+    }
+  
+    updateCanvasSize() {
+        const container = this.canvas.parentElement;
+        const widthRatio = container.clientWidth / this.originalWidth;
+        const heightRatio = container.clientHeight / this.originalHeight;
+        this.scale = Math.min(widthRatio, heightRatio);
+        
+        const dpr = window.devicePixelRatio || 1;
+        
+        // Устанавливаем реальные размеры canvas (с учетом DPR)
+        this.canvas.width = Math.floor(this.originalWidth * this.scale * dpr);
+        this.canvas.height = Math.floor(this.originalHeight * this.scale * dpr);
+        
+        // Устанавливаем отображаемые размеры (CSS)
+        this.canvas.style.width = `${this.originalWidth * this.scale}px`;
+        this.canvas.style.height = `${this.originalHeight * this.scale}px`;
+        
+        // Сбрасываем трансформации контекста
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+        this.ctx.scale(dpr, dpr);
+        
+        // Немедленная перерисовка
+        if (this.images[this.currentFrame]) {
+          this.renderFrame();
+        }
+      }
   
     static initAll() {
-        document.querySelectorAll('.frame-animation').forEach(canvas => {
-            try {
-                const options = {
-                    canvas: canvas,
-                    prefix: canvas.dataset.frames,
-                    frameCount: parseInt(canvas.dataset.count),
-                    imagePath: canvas.dataset.path || './media/img-cat/',
-                    digits: parseInt(canvas.dataset.digits) || 3,
-                    fps: parseInt(canvas.dataset.fps) || 24,
-                    loop: canvas.dataset.loop !== 'false',
-                    autoplay: canvas.dataset.autoplay !== 'false',
-                    debug: canvas.dataset.debug !== 'false',
-                    playOnce: canvas.dataset.playOnce === 'true',
-                };
-                
-                const animator = new FrameAnimator(options);
-                
-                // Добавляем обработчик клика на родительский блок
-                const parentBlock = canvas.closest('.land__animate_2');
-                if (parentBlock) {
-                    parentBlock.addEventListener('click', () => {
-                        if (animator.isPlaying) {
-                            animator.stop();
-                        }
-                        // Запускаем с 29 кадра (индекс 28)
-                        animator.playFromFrame(28);
-                    });
-                }
-                
-            } catch (err) {
-                console.error('Failed to initialize animation:', err);
-            }
-        });
+      document.querySelectorAll('.frame-animation').forEach(canvas => {
+        try {
+          const animator = new FrameAnimator({
+            canvas: canvas,
+            prefix: canvas.dataset.frames,
+            frameCount: parseInt(canvas.dataset.count),
+            imagePath: canvas.dataset.path,
+            digits: parseInt(canvas.dataset.digits) || 3,
+            fps: parseInt(canvas.dataset.fps) || 24,
+            loop: canvas.dataset.loop !== 'false',
+            autoplay: canvas.dataset.autoplay !== 'false',
+            playOnce: canvas.dataset.playOnce === 'true',
+          });
+  
+          const parentBlock = canvas.closest('.land__animate_2');
+          if (parentBlock) {
+            parentBlock.addEventListener('click', () => {
+              if (animator.isPlaying) {
+                animator.stop();
+              }
+              animator.playFromFrame(28); // Запуск с 29 кадра (индекс 28)
+            });
+          }
+  
+        } catch (err) {
+          console.error('Ошибка инициализации анимации:', err);
+        }
+      });
     }
   }
   
-  // Автоматическая инициализация
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        FrameAnimator.initAll();
-        document.body.classList.add('loaded');
-    });
-  } else {
+  window.addEventListener('load', () => {
     FrameAnimator.initAll();
-    document.body.classList.add('loaded');
-  }
+  });
