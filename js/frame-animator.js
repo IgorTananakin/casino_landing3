@@ -10,7 +10,7 @@ class FrameAnimator {
       this.frameCount = options.frameCount;
       this.imagePath = this.normalizePath(options.imagePath || './media/imgOpt/');
       this.digits = options.digits || 3;
-      this.fps = options.fps || 34;
+      this.fps = options.fps || 44;
       this.loop = options.loop !== false;
       this.autoplay = options.autoplay !== false;
       this.playOnce = options.playOnce || false;
@@ -52,7 +52,7 @@ class FrameAnimator {
     }
   
     async loadAllFrames() {
-      const batchSize = 45;
+      const batchSize = 370;
       
       for (let i = 1; i <= this.frameCount; i += batchSize) {
         const end = Math.min(i + batchSize - 1, this.frameCount);
@@ -210,7 +210,7 @@ class FrameAnimator {
             frameCount: parseInt(canvas.dataset.count),
             imagePath: canvas.dataset.path,
             digits: parseInt(canvas.dataset.digits) || 3,
-            fps: parseInt(canvas.dataset.fps) || 34,
+            fps: parseInt(canvas.dataset.fps) || 44,
             loop: canvas.dataset.loop !== 'false',
             autoplay: canvas.dataset.autoplay !== 'false',
             playOnce: canvas.dataset.playOnce === 'true',
