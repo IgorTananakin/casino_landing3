@@ -713,8 +713,8 @@ canvas {
   }
 }
 .land__section_4 .land__section_4_item {
-  width: 250px;
-  height: 250px;
+  width: 270px;
+  height: 270px;
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -724,7 +724,7 @@ canvas {
   -webkit-box-align: center;
       -ms-flex-align: center;
           align-items: center;
-  margin-right: 50px;
+  margin-right: 40px;
   position: relative;
   z-index: 2;
 }
